@@ -50,7 +50,7 @@ func (m *ClientAuthMiddleware) New() func(next http.Handler) http.Handler {
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			const op = "http.middleware.AuthMiddleware.New"
+			const op string = "http.middleware.AuthMiddleware.New"
 
 			log := m.log.With(
 				sl.String("op", op),

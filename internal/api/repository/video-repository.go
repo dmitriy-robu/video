@@ -18,11 +18,11 @@ type VideoRepositoryInterface interface {
 	Create(context.Context, types.Video) (int64, error)
 	Update(context.Context, types.Video) error
 	UpdateStatus(context.Context, int64, enum.VideoStatus) error
-	GetByUUID(context.Context, string) (*types.Video, error)
+	GetByUUID(context.Context, string) (types.Video, error)
 	GetList(context.Context, map[string]interface{}) ([]types.Video, error)
 	Delete(context.Context, int64) error
 	SoftDelete(context.Context, int64) error
-	GetVideoPositionByIDAndUserID(context.Context, int64, int64) (*types.VideoPosition, error)
+	GetVideoPositionByIDAndUserID(context.Context, int64, int64) (types.VideoPosition, error)
 	SaveVideoPosition(context.Context, types.VideoPosition) error
 	UpdateVideoPosition(context.Context, types.VideoPosition) error
 }
@@ -36,9 +36,13 @@ func NewVideoRepository(
 }
 
 func (r *VideoRepository) SaveVideoPosition(ctx context.Context, videoPosition types.VideoPosition) error {
-	const op = "VideoRepository.SaveVideoPosition"
+	const op string = "VideoRepository.SaveVideoPosition"
 
-	const query = "INSERT INTO video_positions (user_id,video_id,position,created_at,updated_at) VALUES (?,?,?,?,?)"
+	const query string = `
+		INSERT INTO video_positions 
+		    (user_id,video_id,position,created_at,updated_at) 
+		VALUES (?,?,?,?,?)
+	`
 
 	now := time.Now()
 
@@ -51,9 +55,13 @@ func (r *VideoRepository) SaveVideoPosition(ctx context.Context, videoPosition t
 }
 
 func (r *VideoRepository) UpdateVideoPosition(ctx context.Context, videoPosition types.VideoPosition) error {
-	const op = "VideoRepository.UpdateVideoPosition"
+	const op string = "VideoRepository.UpdateVideoPosition"
 
-	const query = "UPDATE video_positions SET position = ?, updated_at = ? WHERE id = ?"
+	const query string = `
+		UPDATE video_positions 
+		SET position = ?, updated_at = ? 
+		WHERE id = ?
+	`
 
 	_, err := r.db.GetExecer().ExecContext(ctx, query, videoPosition.Position, time.Now(), videoPosition.ID)
 	if err != nil {
@@ -64,7 +72,7 @@ func (r *VideoRepository) UpdateVideoPosition(ctx context.Context, videoPosition
 }
 
 func (r *VideoRepository) Create(ctx context.Context, video types.Video) (int64, error) {
-	const op = "VideoRepository.Create"
+	const op string = "VideoRepository.Create"
 
 	now := time.Now()
 
@@ -72,7 +80,11 @@ func (r *VideoRepository) Create(ctx context.Context, video types.Video) (int64,
 	video.CreatedAt = now
 	video.UpdatedAt = now
 
-	const query = "INSERT INTO videos (uuid,name,hash_name,description,status,duration,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?)"
+	const query string = `
+		INSERT INTO videos 
+		    (uuid,name,hash_name,description,status,duration,created_at,updated_at) 
+		VALUES (?,?,?,?,?,?,?,?)
+	`
 
 	inId, err := r.db.GetExecer().ExecContext(ctx, query,
 		video.UUID,
@@ -97,9 +109,13 @@ func (r *VideoRepository) Create(ctx context.Context, video types.Video) (int64,
 }
 
 func (r *VideoRepository) Update(ctx context.Context, video types.Video) error {
-	const op = "VideoRepository.Update"
+	const op string = "VideoRepository.Update"
 
-	const query = "UPDATE videos SET name = ?, hash_name = ?, description = ?, status = ?, updated_at = ? WHERE id = ?"
+	const query string = `
+		UPDATE videos 
+		SET name = $1, hash_name = $2, description = $3, status = $4, updated_at = $5 
+		WHERE id = $6
+	`
 
 	_, err := r.db.GetExecer().ExecContext(ctx, query,
 		video.Name,
@@ -117,9 +133,13 @@ func (r *VideoRepository) Update(ctx context.Context, video types.Video) error {
 }
 
 func (r *VideoRepository) UpdateStatus(ctx context.Context, id int64, status enum.VideoStatus) error {
-	const op = "VideoRepository.UpdateStatus"
+	const op string = "VideoRepository.UpdateStatus"
 
-	const query = "UPDATE videos SET status = ? WHERE id = ?"
+	const query string = `
+		UPDATE videos 
+		SET status = $1 
+		WHERE id = $2
+	`
 
 	_, err := r.db.GetExecer().ExecContext(ctx, query, status, id)
 	if err != nil {
@@ -129,11 +149,14 @@ func (r *VideoRepository) UpdateStatus(ctx context.Context, id int64, status enu
 	return nil
 }
 
-func (r *VideoRepository) GetByUUID(ctx context.Context, uuid string) (*types.Video, error) {
-	const op = "VideoRepository.GetByUUID"
+func (r *VideoRepository) GetByUUID(ctx context.Context, uuid string) (types.Video, error) {
+	const op string = "VideoRepository.GetByUUID"
 
-	const query = `
-		SELECT id,uuid,name,hash_name,description,status,created_at,updated_at FROM videos WHERE uuid = ? AND status = ?
+	const query string = `
+		SELECT id,uuid,name,hash_name,description,status,created_at,updated_at 
+		FROM videos 
+		WHERE uuid = ? 
+		  AND status = ?
 	`
 
 	var video types.Video
@@ -148,15 +171,20 @@ func (r *VideoRepository) GetByUUID(ctx context.Context, uuid string) (*types.Vi
 		&video.CreatedAt,
 		&video.UpdatedAt,
 	); err != nil {
-		return nil, fmt.Errorf("%s: %w", op, err)
+		return video, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return &video, nil
+	return video, nil
 }
 
 func (r *VideoRepository) GetList(ctx context.Context, filters map[string]interface{}) ([]types.Video, error) {
-	const op = "VideoRepository.GetList"
-	var query = "SELECT id,uuid,name,hash_name,description,status,duration,created_at,updated_at FROM videos WHERE deleted_at IS NULL"
+	const op string = "VideoRepository.GetList"
+
+	var query = `
+		SELECT id,uuid,name,hash_name,description,status,duration,created_at,updated_at 
+		FROM videos 
+		WHERE deleted_at IS NULL
+	`
 
 	if len(filters) > 0 {
 		for field, value := range filters {
@@ -195,9 +223,13 @@ func (r *VideoRepository) GetList(ctx context.Context, filters map[string]interf
 }
 
 func (r *VideoRepository) SoftDelete(ctx context.Context, id int64) error {
-	const op = "VideoRepository.SoftDelete"
+	const op string = "VideoRepository.SoftDelete"
 
-	const query = "UPDATE videos SET deleted_at = ? WHERE id = ?"
+	const query string = `
+		UPDATE videos 
+		SET deleted_at = ? 
+		WHERE id = ?
+	`
 
 	_, err := r.db.GetExecer().ExecContext(ctx, query, time.Now(), id)
 	if err != nil {
@@ -208,9 +240,9 @@ func (r *VideoRepository) SoftDelete(ctx context.Context, id int64) error {
 }
 
 func (r *VideoRepository) Delete(ctx context.Context, id int64) error {
-	const op = "VideoRepository.Delete"
+	const op string = "VideoRepository.Delete"
 
-	const query = "DELETE FROM videos WHERE id = ?"
+	const query string = "DELETE FROM videos WHERE id = ?"
 
 	_, err := r.db.GetExecer().ExecContext(ctx, query, id)
 	if err != nil {
@@ -224,10 +256,15 @@ func (r *VideoRepository) GetVideoPositionByIDAndUserID(
 	ctx context.Context,
 	videoID,
 	userID int64,
-) (*types.VideoPosition, error) {
-	const op = "VideoRepository.GetVideoPositionByUUIDAndUserUUID"
+) (types.VideoPosition, error) {
+	const op string = "VideoRepository.GetVideoPositionByUUIDAndUserUUID"
 
-	const query = "SELECT id,user_id,video_id,position,created_at,updated_at FROM video_positions WHERE video_id = ? AND user_id = ?"
+	const query string = `
+		SELECT id,user_id,video_id,position,created_at,updated_at 
+		FROM video_positions 
+		WHERE video_id = ? 
+		  AND user_id = ?
+	`
 
 	var videoPosition types.VideoPosition
 
@@ -239,8 +276,8 @@ func (r *VideoRepository) GetVideoPositionByIDAndUserID(
 		&videoPosition.CreatedAt,
 		&videoPosition.UpdatedAt,
 	); err != nil {
-		return nil, fmt.Errorf("%s: %w", op, err)
+		return videoPosition, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return &videoPosition, nil
+	return videoPosition, nil
 }

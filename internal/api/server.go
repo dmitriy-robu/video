@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-const ENV_PATH = ".env"
+const EnvPath = ".env"
 
 func NewServer(cfg *config.Config, r *chi.Mux) *http.Server {
 	return &http.Server{
@@ -74,7 +74,7 @@ func generateAppToken() string {
 }
 
 func saveTokenToENV(token string) {
-	file, err := os.OpenFile(ENV_PATH, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.OpenFile(EnvPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatalf("Failed to open env file: %v", err)
 	}

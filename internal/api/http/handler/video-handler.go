@@ -41,7 +41,7 @@ func NewVideoHandler(
 
 func (h *VideoHandler) GetVideos() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "VideoHandler.GetVideos"
+		const op string = "VideoHandler.GetVideos"
 
 		log := h.log.With(
 			sl.String("op", op),
@@ -72,7 +72,7 @@ func (h *VideoHandler) GetVideos() http.HandlerFunc {
 
 func (h *VideoHandler) GetVideosWithPositions() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "VideoHandler.GetVideosWithPositions"
+		const op string = "VideoHandler.GetVideosWithPositions"
 
 		log := h.log.With(
 			sl.String("op", op),
@@ -108,7 +108,7 @@ func (h *VideoHandler) GetVideosWithPositions() http.HandlerFunc {
 
 func (h *VideoHandler) GetVideo() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "VideoHandler.GetVideos"
+		const op string = "VideoHandler.GetVideos"
 
 		log := h.log.With(
 			sl.String("op", op),
@@ -214,7 +214,7 @@ func (h *VideoHandler) GetVideo() http.HandlerFunc {
 // GetVideoPosition gets the video position by uuid and user uuid
 func (h *VideoHandler) GetVideoPosition() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "VideoHandler.GetVideoPosition"
+		const op string = "VideoHandler.GetVideoPosition"
 
 		log := h.log.With(
 			sl.String("op", op),
@@ -260,7 +260,7 @@ func (h *VideoHandler) GetVideoPosition() http.HandlerFunc {
 // SaveVideoPosition saves the video position to the database
 func (h *VideoHandler) SaveVideoPosition() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "VideoHandler.SaveVideoPosition"
+		const op string = "VideoHandler.SaveVideoPosition"
 
 		log := h.log.With(
 			sl.String("op", op),
@@ -330,7 +330,7 @@ func (h *VideoHandler) SaveVideoPosition() http.HandlerFunc {
 // It returns a http.HandlerFunc
 func (h *VideoHandler) ProcessUpload() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "VideoHandler.ProcessUpload"
+		const op string = "VideoHandler.ProcessUpload"
 
 		log := h.log.With(
 			sl.String("op", op),
@@ -411,7 +411,7 @@ func (h *VideoHandler) ProcessUpload() http.HandlerFunc {
 // DeleteVideo deletes a video by uuid from the database and storage
 func (h *VideoHandler) DeleteVideo() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "VideoHandler.DeleteVideo"
+		const op string = "VideoHandler.DeleteVideo"
 
 		log := h.log.With(
 			sl.String("op", op),
@@ -451,7 +451,7 @@ func (h *VideoHandler) DeleteVideo() http.HandlerFunc {
 // SoftDeleteVideo soft deletes, update deleted_at field of a video by uuid from the database
 func (h *VideoHandler) SoftDeleteVideo() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "VideoHandler.DeleteVideo"
+		const op string = "VideoHandler.DeleteVideo"
 
 		log := h.log.With(
 			sl.String("op", op),
@@ -490,7 +490,7 @@ func (h *VideoHandler) SoftDeleteVideo() http.HandlerFunc {
 
 func (h *VideoHandler) UpdateVideoInfo() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "VideoHandler.UpdateVideoInfo"
+		const op string = "VideoHandler.UpdateVideoInfo"
 
 		log := h.log.With(
 			sl.String("op", op),

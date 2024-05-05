@@ -1,13 +1,13 @@
 package types
 
 type User struct {
-	ID    int64  `json:"id"`
-	UUID  string `json:"uuid"`
-	Name  string `json:"name"`
-	Email string `json:"email"`
+	ID    int64
+	UUID  string
+	Name  string
+	Email string
 }
 
 type Role struct {
-	ID   int64  `json:"id"`
-	Name string `json:"name"`
+	ID   int64
+	Name string
 }

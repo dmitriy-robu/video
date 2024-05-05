@@ -25,9 +25,16 @@ func NewUserRepository(db db.SqlInterface) *UserRepository {
 }
 
 func (r *UserRepository) GetUserByUUID(ctx context.Context, uuid string) (types.User, error) {
-	const op = "repository.user.FindUserByUUID"
+	const op string = "repository.user.FindUserByUUID"
 
-	const query = "SELECT id,uuid,name,email FROM users WHERE uuid = ? AND active = 1 AND deleted_at IS NULL AND email_verified_at IS NOT NULL"
+	const query string = `
+		SELECT id,uuid,name,email 
+		FROM users 
+		WHERE uuid = ? 
+		  AND active = 1 
+		  AND deleted_at IS NULL 
+		  AND email_verified_at IS NOT NULL
+	`
 
 	row := r.db.GetExecer().QueryRowContext(ctx, query, uuid)
 
@@ -46,9 +53,14 @@ func (r *UserRepository) GetUserByUUID(ctx context.Context, uuid string) (types.
 }
 
 func (r *UserRepository) GetRoleByUserID(ctx context.Context, userID int64) (types.Role, error) {
-	const op = "repository.user.GetRoleByUserID"
+	const op string = "repository.user.GetRoleByUserID"
 
-	const query = "SELECT r.id, r.name FROM roles r INNER JOIN model_has_roles ur ON r.id = ur.role_id WHERE ur.model_id = ?"
+	const query string = `
+		SELECT r.id, r.name 
+		FROM roles r 
+		    INNER JOIN model_has_roles ur ON r.id = ur.role_id
+		WHERE ur.model_id = ?
+	`
 
 	row := r.db.GetExecer().QueryRowContext(ctx, query, userID)
 

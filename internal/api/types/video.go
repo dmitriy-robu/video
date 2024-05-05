@@ -6,23 +6,23 @@ import (
 )
 
 type Video struct {
-	ID          int64            `json:"id"`
-	UUID        string           `json:"uuid"`
-	Name        string           `json:"name"`
-	HashName    string           `json:"hash_name"`
-	Description string           `json:"description,omitempty"`
-	Status      enum.VideoStatus `json:"status"`
-	Duration    float64          `json:"duration"`
-	DeletedAt   *time.Time       `json:"deleted_at"`
-	CreatedAt   time.Time        `json:"created_at"`
-	UpdatedAt   time.Time        `json:"updated_at"`
+	ID          int64
+	UUID        string
+	Name        string
+	HashName    string
+	Description string
+	Status      enum.VideoStatus
+	Duration    float64
+	DeletedAt   *time.Time
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
 
 type VideoPosition struct {
-	ID        int64     `json:"id"`
-	UserID    int64     `json:"user_id"`
-	VideoID   int64     `json:"video_id"`
-	Position  float64   `json:"position"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID        int64
+	UserID    int64
+	VideoID   int64
+	Position  float64
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }

@@ -32,7 +32,7 @@ func NewPusherEvent(
 }
 
 func (w *WebSocketClient) TriggerEvent(e Event) error {
-	const op = "event.PusherEvent.TriggerEvent"
+	const op string = "event.PusherEvent.TriggerEvent"
 
 	log := w.log.With(
 		sl.String("op", op),

@@ -56,7 +56,7 @@ func NewMysqlDatabase(lc fx.Lifecycle, log *slog.Logger, cfg *config.Config) (*s
 }
 
 func NewMongoDatabase(lc fx.Lifecycle, log *slog.Logger, cfg *config.Config) (MongoConnection, error) {
-	const op = "db.NewMongoDatabase"
+	const op string = "db.NewMongoDatabase"
 
 	log = log.With(
 		sl.String("op", op),

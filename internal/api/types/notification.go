@@ -7,12 +7,12 @@ import (
 )
 
 type Notification struct {
-	ID        primitive.ObjectID      `json:"id" bson:"_id,omitempty"`
-	UUID      string                  `json:"uuid" bson:"uuid"`
-	Name      string                  `json:"name" bson:"name"`
-	Body      string                  `json:"body" bson:"body"`
-	Status    enum.NotificationStatus `json:"type" bson:"type"`
-	IsRead    bool                    `json:"is_read" bson:"is_read"`
-	CreatedAt time.Time               `json:"created_at" bson:"created_at"`
-	UpdatedAt time.Time               `json:"updated_at" bson:"updated_at"`
+	ID        primitive.ObjectID      `bson:"_id,omitempty"`
+	UUID      string                  `bson:"uuid"`
+	Name      string                  `bson:"name"`
+	Body      string                  `bson:"body"`
+	Status    enum.NotificationStatus `bson:"type"`
+	IsRead    bool                    `bson:"is_read"`
+	CreatedAt time.Time               `bson:"created_at"`
+	UpdatedAt time.Time               `bson:"updated_at"`
 }

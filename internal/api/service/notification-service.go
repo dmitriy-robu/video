@@ -33,7 +33,7 @@ func NewNotificationService(
 }
 
 func (s *NotificationService) ProcessNotification(ctx context.Context, notification types.Notification) error {
-	const op = "NotificationService.ProcessNotification"
+	const op string = "NotificationService.ProcessNotification"
 
 	log := s.log.With(
 		sl.String("op", op),
@@ -62,19 +62,20 @@ func (s *NotificationService) ProcessNotification(ctx context.Context, notificat
 }
 
 func (s *NotificationService) sendNotificationByEmail(notification types.Notification) error {
-	const op = "NotificationService.sendNotificationByEmail"
+	const op string = "NotificationService.sendNotificationByEmail"
 
 	log := s.log.With(
 		sl.String("op", op),
 	)
 
+	//TODO: implement sending notification by email
 	log.Info("sending notification by email")
 
 	return nil
 }
 
 func (s *NotificationService) sendNotificationByEvent(notification types.Notification) error {
-	const op = "NotificationService.sendNotificationByEvent"
+	const op string = "NotificationService.sendNotificationByEvent"
 
 	log := s.log.With(
 		sl.String("op", op),

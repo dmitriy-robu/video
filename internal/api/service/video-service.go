@@ -31,6 +31,13 @@ type VideoService struct {
 	transcodeQueue      VideoTranscodeTaskChan
 }
 
+type UploadResult struct {
+	DestinationPath string
+	UploadPath      string
+	ChunkHash       string
+	Err             error
+}
+
 type UploadAndTranscodeQueueInterface interface {
 	WaitForTranscodeVideoSignals()
 }
@@ -66,10 +73,6 @@ func NewVideoService(
 	}
 }
 
-// VideoResponse is a response body for Video data
-// @Description Video data along with status
-// @Accept json
-// @Produce json
 type VideoResponse struct {
 	UUID        string  `json:"uuid"`
 	Name        string  `json:"name"`
@@ -97,7 +100,7 @@ func NewVideoTranscodeTask() VideoTranscodeTaskChan {
 }
 
 func (s *VideoService) WaitForTranscodeVideoSignals() {
-	const op = "VideoService.WaitForTranscodeVideoSignals"
+	const op string = "VideoService.WaitForTranscodeVideoSignals"
 
 	// Quanta of work to be done by each worker
 	workerCount := s.cfg.VideoService.TranscodeVideoWorkerCount
@@ -113,7 +116,7 @@ func (s *VideoService) WaitForTranscodeVideoSignals() {
 
 // transcodeVideoWorker is a method to transcode video worker
 func (s *VideoService) transcodeVideoWorker(workerID int) {
-	const op = "VideoService.uploadVideoWorker"
+	const op string = "VideoService.uploadVideoWorker"
 
 	log := s.log.With(
 		sl.String("op", op),
@@ -135,7 +138,7 @@ func (s *VideoService) transcodeVideoWorker(workerID int) {
 
 // ProcessSaveOrUpdateVideoPosition is a method to process save or update video position
 func (s *VideoService) ProcessSaveOrUpdateVideoPosition(ctx context.Context, userID int64, videoUUID string, position float64) error {
-	const op = "VideoService.ProcessSaveVideoPosition"
+	const op string = "VideoService.ProcessSaveVideoPosition"
 
 	log := s.log.With(
 		sl.String("op", op),
@@ -163,7 +166,7 @@ func (s *VideoService) ProcessSaveOrUpdateVideoPosition(ctx context.Context, use
 	}
 
 	p.Position = videoPosition.Position
-	if err := s.videoRepo.UpdateVideoPosition(ctx, *p); err != nil {
+	if err := s.videoRepo.UpdateVideoPosition(ctx, p); err != nil {
 		log.Error("failed to update video position", sl.Err(err))
 		return errors.New("failed to update video position")
 	}
@@ -173,7 +176,7 @@ func (s *VideoService) ProcessSaveOrUpdateVideoPosition(ctx context.Context, use
 
 // readFile is a method to read file from the storage path
 func (s *VideoService) readFile(path string) ([]byte, error) {
-	const op = "VideoService.readFile"
+	const op string = "VideoService.readFile"
 
 	log := s.log.With(
 		sl.String("op", op),
@@ -190,7 +193,7 @@ func (s *VideoService) readFile(path string) ([]byte, error) {
 
 // ProcessGetVideoPlayListByUUID is a method to process video playlist by UUID and return the video file
 func (s *VideoService) ProcessGetVideoPlayListByUUID(ctx context.Context, uuid string) ([]byte, error) {
-	const op = "VideoService.ProcessGetVideoM3U8ByUUID"
+	const op string = "VideoService.ProcessGetVideoM3U8ByUUID"
 
 	log := s.log.With(
 		sl.String("op", op),
@@ -203,13 +206,18 @@ func (s *VideoService) ProcessGetVideoPlayListByUUID(ctx context.Context, uuid s
 		return nil, errors.New("failed to get video by uuid")
 	}
 
-	videoPath := fmt.Sprintf("%s/%s/%s/playlist.m3u8", s.cfg.HTTPServer.StoragePath, s.cfg.VideoService.VideoPath, video.HashName)
+	videoPath := fmt.Sprintf("%s/%s/%s/playlist.m3u8",
+		s.cfg.HTTPServer.StoragePath,
+		s.cfg.VideoService.VideoPath,
+		video.HashName,
+	)
+
 	return s.readFile(videoPath)
 }
 
 // ProcessGetVideoM3U8 is a method to process video M3U8 and return the video file
 func (s *VideoService) ProcessGetVideoM3U8(url string) ([]byte, error) {
-	const op = "VideoService.ProcessGetVideoM3U8"
+	const op string = "VideoService.ProcessGetVideoM3U8"
 
 	log := s.log.With(
 		sl.String("op", op),
@@ -224,7 +232,12 @@ func (s *VideoService) ProcessGetVideoM3U8(url string) ([]byte, error) {
 		return nil, errors.New("failed to parse hash")
 	}
 
-	videoPath := fmt.Sprintf("%s/%s/%s/%s", s.cfg.HTTPServer.StoragePath, s.cfg.VideoService.VideoPath, hashName, resolution)
+	videoPath := fmt.Sprintf("%s/%s/%s/%s",
+		s.cfg.HTTPServer.StoragePath,
+		s.cfg.VideoService.VideoPath,
+		hashName,
+		resolution,
+	)
 
 	video, err := s.readFile(videoPath)
 	if err != nil {
@@ -255,7 +268,7 @@ func (s *VideoService) ProcessGetVideoM3U8(url string) ([]byte, error) {
 
 // ProcessGetVideoTS is a method to process video TS and return the video file
 func (s *VideoService) ProcessGetVideoTS(ctx context.Context, url string) ([]byte, error) {
-	const op = "VideoService.ProcessGetVideoTS"
+	const op string = "VideoService.ProcessGetVideoTS"
 
 	log := s.log.With(
 		sl.String("op", op),
@@ -286,10 +299,10 @@ func (s *VideoService) ProcessUpload(
 	ctx context.Context,
 	data data.VideoUploadData,
 ) error {
-	const op = "VideoService.ProcessUpload"
+	const op string = "VideoService.ProcessUpload"
 
 	log := s.log.With(
-		slog.String("op", op),
+		sl.String("op", op),
 	)
 
 	select {
@@ -300,13 +313,13 @@ func (s *VideoService) ProcessUpload(
 		log.Info("processing upload")
 	}
 
-	dstPath, uploadPath, chunkHash, err := s.uploadFile(data)
-	if err != nil {
-		log.Error("failed to upload file", sl.Err(err))
+	uploadResult := s.uploadFile(data)
+	if uploadResult.Err != nil {
+		log.Error("failed to upload file", sl.Err(uploadResult.Err))
 		return errors.New("failed to upload file")
 	}
 
-	duration, err := s.getVideoDuration(dstPath)
+	duration, err := s.getVideoDuration(uploadResult.DestinationPath)
 	if err != nil {
 		log.Error("failed to get video duration", sl.Err(err))
 		return errors.New("failed to get video duration")
@@ -315,7 +328,7 @@ func (s *VideoService) ProcessUpload(
 	video := types.Video{
 		Name:        data.Name,
 		Description: data.Description,
-		HashName:    chunkHash,
+		HashName:    uploadResult.ChunkHash,
 		Status:      enum.VideoStatusProcessing,
 		Duration:    duration,
 	}
@@ -327,10 +340,10 @@ func (s *VideoService) ProcessUpload(
 	}
 
 	videoTranscodeTask := VideoTranscodeTask{
-		UploadPath: uploadPath,
+		UploadPath: uploadResult.UploadPath,
 		VideoID:    videoID,
-		DstPath:    dstPath,
-		ChunkHash:  chunkHash,
+		DstPath:    uploadResult.DestinationPath,
+		ChunkHash:  uploadResult.ChunkHash,
 	}
 
 	s.transcodeQueue <- videoTranscodeTask
@@ -338,15 +351,25 @@ func (s *VideoService) ProcessUpload(
 	return nil
 }
 
+// getVideoDuration is a method to get the video duration using ffprobe
 func (s *VideoService) getVideoDuration(filePath string) (float64, error) {
-	const op = "VideoService.getVideoDuration"
+	const op string = "VideoService.getVideoDuration"
 
 	log := s.log.With(
 		sl.String("op", op),
 		sl.String("file_path", filePath),
 	)
 
-	cmd := exec.Command("ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", filePath)
+	cmd := exec.Command(
+		"ffprobe",
+		"-v",
+		"error",
+		"-show_entries",
+		"format=duration",
+		"-of",
+		"default=noprint_wrappers=1:nokey=1",
+		filePath,
+	)
 	out, err := cmd.Output()
 	if err != nil {
 		log.Error("error running ffprobe", sl.Err(err))
@@ -362,8 +385,8 @@ func (s *VideoService) getVideoDuration(filePath string) (float64, error) {
 }
 
 // uploadFile is a method to upload file to the storage path
-func (s *VideoService) uploadFile(data data.VideoUploadData) (string, string, string, error) {
-	const op = "VideoService.uploadFile"
+func (s *VideoService) uploadFile(data data.VideoUploadData) UploadResult {
+	const op string = "VideoService.uploadFile"
 
 	log := s.log.With(
 		sl.String("op", op),
@@ -375,14 +398,14 @@ func (s *VideoService) uploadFile(data data.VideoUploadData) (string, string, st
 
 	if err := os.MkdirAll(uploadPath, 0755); err != nil {
 		log.Error("failed to create upload directory", sl.Err(err))
-		return "", "", "", errors.New("failed to create upload directory")
+		return UploadResult{Err: errors.New("failed to create upload directory")}
 	}
 
 	if _, err := os.Stat(uploadPath); os.IsNotExist(err) {
 		err := os.Mkdir(uploadPath, os.ModePerm)
 		if err != nil {
 			log.Error("failed to create upload directory", sl.Err(err))
-			return "", "", "", errors.New("failed to create upload directory")
+			return UploadResult{Err: errors.New("failed to create upload directory")}
 		}
 	}
 
@@ -390,7 +413,7 @@ func (s *VideoService) uploadFile(data data.VideoUploadData) (string, string, st
 	dst, err := os.Create(dstPath)
 	if err != nil {
 		log.Error("failed to create file", sl.Err(err))
-		return "", "", "", errors.New("failed to create file")
+		return UploadResult{Err: errors.New("failed to create file")}
 	}
 	defer func(dst *os.File) {
 		if err := dst.Close(); err != nil {
@@ -400,10 +423,15 @@ func (s *VideoService) uploadFile(data data.VideoUploadData) (string, string, st
 
 	if _, err = io.Copy(dst, data.File); err != nil {
 		log.Error("failed to copy file", sl.Err(err))
-		return "", "", "", errors.New("failed to copy file")
+		return UploadResult{Err: errors.New("failed to copy file")}
 	}
 
-	return dstPath, uploadPath, chunkHash, nil
+	return UploadResult{
+		DestinationPath: dstPath,
+		UploadPath:      uploadPath,
+		ChunkHash:       chunkHash,
+		Err:             nil,
+	}
 }
 
 // processTranscode is a method to process video transcoding and chunking
@@ -414,7 +442,7 @@ func (s *VideoService) processTranscode(
 	dstPath string,
 	chunkHash string,
 ) error {
-	const op = "VideoService.processTranscode"
+	const op string = "VideoService.processTranscode"
 
 	log := s.log.With(
 		sl.String("op", op),
@@ -475,7 +503,7 @@ func (s *VideoService) processTranscode(
 
 // transcodeAndChunk is a method to transcode and chunk video into smaller segments using ffmpeg
 func (s *VideoService) transcodeAndChunk(uploadPath, videoPath string) error {
-	const op = "VideoService.transcodeAndChunk"
+	const op string = "VideoService.transcodeAndChunk"
 
 	log := s.log.With(
 		sl.String("op", op),
@@ -527,7 +555,7 @@ func (s *VideoService) transcodeAndChunk(uploadPath, videoPath string) error {
 
 // createMasterM8U3PlayList is a method to create master m8u3 playlist
 func (s *VideoService) createMasterM8U3PlayList(uploadPath string, chunkHash string) error {
-	const op = "VideoService.createMasterM8U3PlayList"
+	const op string = "VideoService.createMasterM8U3PlayList"
 
 	log := s.log.With(
 		sl.String("op", op),
@@ -571,7 +599,7 @@ func (s *VideoService) createMasterM8U3PlayList(uploadPath string, chunkHash str
 
 // getBitrate is a method to get the bitrate of the video
 func (s *VideoService) getBitrate(filePath string) (int64, error) {
-	const op = "VideoService.getBitrate"
+	const op string = "VideoService.getBitrate"
 
 	log := s.log.With(
 		sl.String("op", op),
@@ -599,7 +627,7 @@ func (s *VideoService) getBitrate(filePath string) (int64, error) {
 
 // ProcessDeleteVideo is a method to process video deletion
 func (s *VideoService) ProcessDeleteVideo(ctx context.Context, uuid string) error {
-	const op = "VideoService.ProcessDeleteVideo"
+	const op string = "VideoService.ProcessDeleteVideo"
 
 	log := s.log.With(
 		sl.String("op", op),
@@ -628,7 +656,7 @@ func (s *VideoService) ProcessDeleteVideo(ctx context.Context, uuid string) erro
 
 // ProcessSoftDeleteVideo is a method to process soft delete video
 func (s *VideoService) ProcessSoftDeleteVideo(ctx context.Context, uuid string) error {
-	const op = "VideoService.ProcessSoftDeleteVideo"
+	const op string = "VideoService.ProcessSoftDeleteVideo"
 
 	log := s.log.With(
 		sl.String("op", op),
@@ -651,7 +679,7 @@ func (s *VideoService) ProcessSoftDeleteVideo(ctx context.Context, uuid string) 
 
 // ProcessGetVideoList is a method to process getting video list
 func (s *VideoService) ProcessGetVideoList(ctx context.Context) ([]VideoResponse, error) {
-	const op = "VideoService.ProcessGetVideoList"
+	const op string = "VideoService.ProcessGetVideoList"
 
 	log := s.log.With(
 		sl.String("op", op),
@@ -688,7 +716,7 @@ func (s *VideoService) ProcessGetVideoListWithPosition(
 	userID int64,
 	filter map[string]interface{},
 ) ([]VideoResponse, error) {
-	const op = "VideoService.ProcessGetVideoList"
+	const op string = "VideoService.ProcessGetVideoList"
 
 	log := s.log.With(
 		sl.String("op", op),
@@ -727,7 +755,7 @@ func (s *VideoService) ProcessGetVideoListWithPosition(
 
 // ProcessUpdateVideoInfo is a method to process updating video info
 func (s *VideoService) ProcessUpdateVideoInfo(ctx context.Context, video types.Video) error {
-	const op = "VideoService.ProcessUpdateVideoInfo"
+	const op string = "VideoService.ProcessUpdateVideoInfo"
 
 	log := s.log.With(
 		sl.String("op", op),
@@ -743,7 +771,7 @@ func (s *VideoService) ProcessUpdateVideoInfo(ctx context.Context, video types.V
 
 // ProcessGetVideoPosition is a method to process getting video position
 func (s *VideoService) ProcessGetVideoPosition(ctx context.Context, userID int64, videoUUID string) (float64, error) {
-	const op = "VideoService.ProcessGetVideoPosition"
+	const op string = "VideoService.ProcessGetVideoPosition"
 
 	log := s.log.With(
 		sl.String("op", op),

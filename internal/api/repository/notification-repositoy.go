@@ -28,7 +28,7 @@ func NewNotificationRepository(
 }
 
 func (r *NotificationRepository) Create(ctx context.Context, notification types.Notification) error {
-	const op = "NotificationRepository.Create"
+	const op string = "NotificationRepository.Create"
 
 	now := time.Now()
 
