@@ -20,27 +20,4 @@ Database manipulation: Provides APIs for CRUD operations on video metadata.
 Soft delete: Allows hiding videos from clients without permanent deletion.
 Scalability: Designed to handle a high volume of video files and requests.
 
-### Getting Started:
-
-Clone the repository
-Install Golang
-Run go build to build the microservice
-Configure the database connection
-Start the microservice with ./main
-Documentation:
-
-API documentation: URL API documentation
-Deployment guide: URL Deployment guide
-Contributing:
-
-Fork the repository
-Create a new branch
-Implement your changes
-Submit a pull request
-License:
-
-This microservice is licensed under the MIT license.
-Contact:
-
-Your name and contact information: URL Your website or contact page
 
